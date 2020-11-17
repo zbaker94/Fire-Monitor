@@ -30,6 +30,10 @@ def listen_document(collection, document):
     doc_watch = doc_ref.on_snapshot(on_snapshot)
 
 db = firestore.Client()
+### TODO get/generate device id
+### TODO check if document exists but if not, create it in `devices` collection
+
+### listen to changes to device settings
 listen_document('devices', 'GUID')
 listen_delay = 1
 listen_msg = "listening..."
