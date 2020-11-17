@@ -1,4 +1,5 @@
 import threading
+import json
 from time import sleep
 
 from google.cloud import firestore
@@ -14,7 +15,12 @@ def listen_document(collection, document):
     def on_snapshot(doc_snapshot, changes, read_time):
         for doc in doc_snapshot:
             print(f'Received document snapshot: {doc.id}')
+            data = doc.to_dict()
             
+            if data != json.loads(settings):
+                print("updating settings.json: " + str(data))
+                with open('settings.json', 'w') as fp:
+                    json.dump(data, fp)
            
         callback_done.set()
 
@@ -24,9 +30,12 @@ def listen_document(collection, document):
     doc_watch = doc_ref.on_snapshot(on_snapshot)
 
 db = firestore.Client()
-listen_document('cities', 'SF')
+listen_document('devices', 'GUID')
 listen_delay = 1
 listen_msg = "listening..."
+settings_file = open("settings.json", "r")
+settings = settings_file.read()
+print('Found settings.json: ' + str(settings_file.read()))
 
 while True:
     sleep(listen_delay)
