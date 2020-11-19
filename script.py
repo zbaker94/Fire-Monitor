@@ -8,6 +8,9 @@ from getmac import get_mac_address as gma
 
 from google.cloud import firestore
 
+db = firestore.Client()
+doc_ref = None
+
 def Merge_Dict(dict1, dict2):
     if dict1 is not None:
         if dict2 is not None:
@@ -19,7 +22,7 @@ def Merge_Dict(dict1, dict2):
         return None
 
 def listen_document(collection, document):
-    db = firestore.Client()
+    
     print("listening to document")
     # Create an Event for notifying main thread.
     callback_done = threading.Event()
@@ -45,7 +48,6 @@ def listen_document(collection, document):
     # Watch the document
     doc_watch = doc_ref.on_snapshot(on_snapshot)
 
-db = firestore.Client()
 ### Create settings.json if it doesn't exist
 if not path.exists('settings.json'):
     try:
@@ -69,12 +71,20 @@ if device_id not in settings_dict or settings_dict.device_id != device_id:
     settings_dict["device_id"] = device_id
     with open('settings.json', 'w') as fp:
         json.dump(settings_dict, fp)
-### TODO check if document exists but if not, create it in `devices` collection
-
+### check if document exists but if not, create it in `devices` collection
+document_name = 'device_' + str(device_id)
+doc_ref = db.collection("devices").document(document_name)
+doc = doc_ref.get()
+if doc.exists:
+    print("Document " + document_name + " exists in devices collection")
+else:
+    print("Document " + document_name + " does not exist in devices collection")
+    print("Creating now...")
+    db.collection(u'devices').document(document_name).set(settings_dict)
 ### listen to changes to device settings
-listen_document('devices', 'GUID')
+listen_document('devices', document_name)
 listen_delay = 1
-listen_msg = "listening..."
+listen_msg = document_name + "..."
 
 while True:
     sleep(listen_delay)
