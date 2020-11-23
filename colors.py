@@ -1,52 +1,65 @@
 from sty import Style, RgbFg, fg
 import math
 
-def spread_colors(colors, size):
-    sections_per_color = math.ceil(size/len(colors))
-    print("size: ", str(size))
-    print("colors: ", str(colors))
-    print("colors len: ", len(colors))
-    print("sections per color: ", str(sections_per_color))
-    count = 0
+def point_to_point_gradient(start_color, end_color, steps):
+    r1, g1, b1 = start_color
+    r2, g2, b2 = end_color
+    delta_r = r2-r1 
+    delta_g = g2-g1
+    delta_b = b2-b1
+
     result = []
-    for color in colors:
-        while count < sections_per_color:
-            result.append(color)
-            count += 1
-        count = 0
+
+    for step in range(0, steps):
+        color_step = (math.ceil(r1 + ((delta_r/steps) * step)), math.ceil(g1 + ((delta_g/steps) * step)), math.ceil(b1 + ((delta_b/steps) * step)))
+        result.append(color_step)
     return result
 
-def create_gradient(colors, steps):
-    result = []
-    steps_per_color = math.floor(steps/(len(colors)))
+### need to limit colors to steps/color_len = 6 or just 4 colors?
+def gradient_steps(colors, steps):
+    colors = colors[0:6]
+    result_floor = []
+    result_ceil = []
+    # determine how many steps each color transition should take
+    steps_per_color_floor = math.floor(steps/(len(colors) - 1))
+    steps_per_color_ceil = math.ceil(steps/(len(colors) - 1))
+    print("Steps per color floor: " + str(steps_per_color_floor))
+    print("Steps per color ceil: " + str(steps_per_color_ceil))
 
-    print("colors length: ", len(colors))
-    print("steps per color: " + str(steps_per_color))
+    # step through the colors
+    for idx, color in enumerate(colors):
+        print("color: ", str(color))
+        #find the next color
+        next_color_idx = int(str(idx)) + 1
+        print("next color idx: " + str(next_color_idx))
+        if(next_color_idx < len(colors)):
+            next_color = colors[next_color_idx]
+            print("next color: ", next_color)
+
+            #get gradient between color and next color
+            gradient_floor = point_to_point_gradient(color, next_color, steps_per_color_floor)
+            gradient_ceil = point_to_point_gradient(color, next_color, steps_per_color_ceil)
+            result_floor += gradient_floor
+            result_ceil += gradient_ceil
+    
+    len_floor = len(result_floor)
+    len_ceil = len(result_ceil)
+    if len_floor - steps >= 0 and len_floor -steps < len_ceil - steps:
+        return result_floor
+    else:
+        return result_ceil
+
+def print_colors(colors):
     for color in colors:
-        next_color_index = [x for x, y in enumerate(colors) if y[0] == color[0] and y[1] == color[1] and y[2] == color[2]]
-        next_color_index = next_color_index[0] + 1
+        fg.color = Style(RgbFg(color[0], color[1], color[2]))
+        buf = fg.color + '■' + fg.rs
+        print(buf)
 
-        if next_color_index < len(colors):
-            next_color = colors[next_color_index]
-            
-            r1,g1,b1 = color
-            r2,g2,b2 = next_color
 
-            delta_r, delta_g, delta_b = (r2-r1)/steps_per_color, (g2-g1)/steps_per_color, (b2-b1)/steps_per_color
-        
-            for step in range(0, steps_per_color):
-                result.append((math.ceil(r1 + (delta_r * step)), math.ceil(g1 + (delta_g * step)), math.ceil(b1 + (delta_b * step))))
-        
-    return result    
-
-list_of_colors = [(255,0,0), (0,0,255), (0,255,0), (255,0,0)]
-# colors = spread_colors(list_of_colors, 25)
-gradient = create_gradient(list_of_colors, 13)
+list_of_colors = [(0,255,0), (0,0,255), (255,0,0), (0,255,0)]
+gradient = gradient_steps(list_of_colors, 25)
 
 print("colors: ", gradient)
 print("result length: ", len(gradient))
 
-for color in gradient:
-    fg.color = Style(RgbFg(color[0], color[1], color[2]))
-    buf = fg.color + '■' + fg.rs
-    print(buf)
+print_colors(gradient)
