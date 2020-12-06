@@ -1,5 +1,6 @@
 from google.cloud import firestore
 from logging_service import log
+import os
 
 db = None
 doc_ref = None
@@ -9,6 +10,7 @@ def init_firebase(name):
     global doc_ref 
     global db
     global document_name
+    os.system('export GOOGLE_APPLICATION_CREDENTIALS="credentials.json"')
     db = firestore.Client()
     document_name = name
     doc_ref = db.collection("devices").document(document_name)
