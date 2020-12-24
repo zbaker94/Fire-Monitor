@@ -20,6 +20,8 @@ def get_settings():
 
 def init_settings():
     global default_settings
+    global settings
+    settings = default_settings
     if not path.exists('settings.json'):
         try:
             f = open('settings.json', 'w+')
@@ -30,6 +32,9 @@ def init_settings():
             log("Could not create or find settings.json")
 
 def update_settings(key, value, settings_dict):
+    #todo allow multiple keys and values as well as single
+    log("settings passed: " + settings_dict)
+    log("settings global: " + settings)
     settings_dict[key] = value
     with open('settings.json', 'w') as fp:
         json.dump(settings_dict, fp)
